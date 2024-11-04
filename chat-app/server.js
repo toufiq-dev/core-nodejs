@@ -1,5 +1,8 @@
 const net = require("net");
 
+const PORT = 8080;
+const HOST = "172.31.15.178";
+
 const server = net.createServer();
 
 // An array of client sockets
@@ -29,7 +32,7 @@ server.on("connection", (socket) => {
   clients.push(socket);
 });
 
-server.listen(8080, "127.0.0.1", () => {
+server.listen(PORT, HOST, () => {
   console.log("Server listening ", server.address());
 });
 
