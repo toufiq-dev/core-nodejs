@@ -1,59 +1,34 @@
-const fs = require("fs/promises");
+const fs = require("fs");
 
-// (async () => {
-//   console.time("writeMany");
-//   const fileHandler = await fs.open("test.txt", "w");
-//   const stream = fileHandler.createWriteStream();
-
-//   for (let i = 0; i < 1000000; i++) {
-//     const buff = Buffer.from(`${i}\n`, "utf-8");
-//     stream.write(buff);
-//   }
-
-//   stream.end();
-//   console.timeEnd("writeMany");
-// })();
-
-// the above program has memory issues
-
-// Execution Time: 300ms
-// Memory Usage: 50MB
 (async () => {
   console.time("writeMany");
-  const fileHandle = await fs.open("test.txt", "w");
-
-  const stream = fileHandle.createWriteStream();
+  const filePath = "../uploader/text.txt";
+  const writeStream = fs.createWriteStream(filePath, {
+    flags: "w",
+    encoding: "utf8",
+  });
 
   let i = 0;
 
-  const numberOfWrites = 10000000;
-
-  const writeMany = () => {
-    while (i < numberOfWrites) {
-      const buff = Buffer.from(`${i}\n`, "utf-8");
-
-      // this is our last write
-      if (i === numberOfWrites - 1) {
-        return stream.end(buff);
-      }
-
-      // if stream.write returns false, stop the loop
-      if (!stream.write(buff)) break;
-
+  function write() {
+    let canWrite = true;
+    while (i <= 499999999 && canWrite) {
+      canWrite = writeStream.write(`${i}\n`);
       i++;
     }
-  };
+    if (i <= 499999999) {
+      writeStream.once("drain", write);
+    }
+  }
 
-  writeMany();
+  write();
 
-  // resume our loop once our stream's internal buffer is emptied
-  stream.on("drain", () => {
-    // console.log("Drained!!!");
-    writeMany();
+  writeStream.on("finish", () => {
+    console.timeEnd("writeMany");
+    console.log("File writing completed.");
   });
 
-  stream.on("finish", () => {
-    console.timeEnd("writeMany");
-    fileHandle.close();
+  writeStream.on("error", (err) => {
+    console.error("An error occurred:", err);
   });
 })();
