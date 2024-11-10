@@ -1,79 +1,45 @@
 const net = require("net");
-const fs = require("fs/promises");
-const path = require("path");
+const fs = require("node:fs/promises");
 
-// Directory to store uploaded files
-const uploadDir = "files";
-
-const server = net.createServer();
+const server = net.createServer(() => {});
 
 server.on("connection", (socket) => {
-  console.info(
-    `New connection from ${socket.remoteAddress}:${socket.remotePort}`
-  );
-  socket.write("Connection established\n");
+  console.log("New connection!");
+  let fileHandle, fileWriteStream;
 
-  let fileHandle;
-  let fileWriteStream;
+  socket.on("data", async (data) => {
+    if (!fileHandle) {
+      socket.pause(); // pause receiving data from the client
 
-  // Unique filename for each client
-  const fileName = `upload_${socket.remoteAddress.replace(/[:.]/g, "_")}_${
-    socket.remotePort
-  }_${Date.now()}.txt`;
-  const filePath = path.join(uploadDir, fileName);
+      const indexOfDivider = data.indexOf("-------");
+      const fileName = data.subarray(10, indexOfDivider).toString("utf-8");
 
-  (async () => {
-    try {
-      // Ensure upload directory exists
-      await fs.mkdir(uploadDir, { recursive: true });
+      fileHandle = await fs.open(`storage/${fileName}`, "w");
+      fileWriteStream = fileHandle.createWriteStream(); // the stream to write to
 
-      // Open a unique file for each connection
-      fileHandle = await fs.open(filePath, "w");
-      fileWriteStream = fileHandle.createWriteStream();
-      console.log(`File opened for writing: ${filePath}`);
+      // Writing to our destination file, discard the headers
+      fileWriteStream.write(data.subarray(indexOfDivider + 7));
 
-      // Handle backpressure
+      socket.resume(); // resume receiving data from the client
       fileWriteStream.on("drain", () => {
         socket.resume();
       });
-
-      // Close file when writing is finished
-      fileWriteStream.on("finish", async () => {
-        console.log(`Finished writing to file: ${filePath}`);
-        await fileHandle.close();
-        fileHandle = null;
-      });
-
-      // Handle incoming data from the client
-      socket.on("data", (data) => {
-        // Write data to the client's dedicated file
-        if (!fileWriteStream.write(data)) {
-          socket.pause(); // Pause socket if the stream buffer is full
-        }
-      });
-
-      // Handle client disconnection
-      socket.on("end", async () => {
-        console.log("Client disconnected.");
-        if (fileWriteStream) {
-          fileWriteStream.end(); // End the write stream
-        }
-        if (fileHandle) {
-          await fileHandle.close(); // Ensure file handle is closed
-        }
-        socket.end();
-      });
-    } catch (err) {
-      console.error("Error during file handling", err);
+    } else {
+      if (!fileWriteStream.write(data)) {
+        socket.pause();
+      }
     }
-  })();
+  });
 
-  // Handle socket errors
-  socket.on("error", (err) => {
-    console.error("Socket error:", err);
+  // This end event happens when the client.js file ends the socket
+  socket.on("end", () => {
+    if (fileHandle) fileHandle.close();
+    fileHandle = undefined;
+    fileWriteStream = undefined;
+    console.log("Connection ended!");
   });
 });
 
-server.listen(8080, () => {
-  console.log("Server listening on port 8080");
+server.listen(5050, "::1", () => {
+  console.log("Uploader server opened on", server.address());
 });
