@@ -40,6 +40,6 @@ server.on("connection", (socket) => {
   });
 });
 
-server.listen(5050, "::1", () => {
+server.listen(5050, "172.31.15.178", () => {
   console.log("Uploader server opened on", server.address());
 });
