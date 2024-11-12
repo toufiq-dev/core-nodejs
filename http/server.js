@@ -9,6 +9,7 @@ server.on("request", (request, response) => {
   let data = "";
   request.on("data", (chunk) => {
     data += chunk.toString();
+    // console.log(data);
   });
 
   request.on("end", () => {
