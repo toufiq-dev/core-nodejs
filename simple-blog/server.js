@@ -1,7 +1,7 @@
 const highMark = require("../web-server/highMark");
 const { USERS, POSTS } = require("./public/db");
 
-const PORT = 8080;
+const PORT = 8081;
 
 const server = new highMark();
 
@@ -50,5 +50,3 @@ server.route("post", "/api/login", (req, res) => {
 server.listen(PORT, () => {
   console.log("Server listening on port", PORT);
 });
-
-

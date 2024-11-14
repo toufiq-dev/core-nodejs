@@ -1,12 +1,12 @@
 const http = require("http");
 
 // The proxy's port
-const PORT = 9000;
+const PORT = 8080;
 
 // List of our backend servers
 const mainServers = [
-  { host: "localhost", port: 9001 },
-  { host: "localhost", port: 9002 },
+  { host: "localhost", port: 8081 },
+  { host: "localhost", port: 8082 },
 ];
 
 // Create the proxy server
