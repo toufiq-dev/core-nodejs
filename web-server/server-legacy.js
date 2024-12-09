@@ -43,7 +43,7 @@ server.on("request", async (request, response) => {
   }
 
   if (request.url === "/upload" && request.method === "POST") {
-    const fileHandle = await fs.open(`./file/${Date.now}.jpeg`, "w");
+    const fileHandle = await fs.open(`./files/${Date.now()}.jpeg`, "w");
     const fileStream = fileHandle.createWriteStream();
 
     request.pipe(fileStream);
