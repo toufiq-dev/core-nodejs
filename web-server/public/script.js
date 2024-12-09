@@ -1,1 +1,1 @@
-alert("Hello there");
+console.log("hello from node server");
