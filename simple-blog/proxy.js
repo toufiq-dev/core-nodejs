@@ -16,6 +16,7 @@ proxy.on("request", (clientRequest, proxyResponse) => {
   // Select a server to route the incoming request to (using round-robin algorithm)
   const mainServer = mainServers.shift();
   mainServers.push(mainServer);
+  console.log(mainServer);
 
   // The request that we are sending to one of our main servers
   const proxyRequest = http.request({
