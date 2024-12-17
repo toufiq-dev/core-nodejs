@@ -13,4 +13,6 @@ const POSTS = [
   },
 ];
 
-module.exports = { USERS, POSTS };
+const SESSIONS = [];
+
+module.exports = { USERS, POSTS, SESSIONS };

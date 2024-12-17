@@ -1,5 +1,5 @@
 const highMark = require("../web-server/highMark");
-const { USERS, POSTS } = require("./public/db");
+const { USERS, POSTS, SESSIONS } = require("./public/db");
 
 const PORT = 8081;
 
@@ -40,6 +40,10 @@ server.route("post", "/api/login", (req, res) => {
     const user = USERS.find((user) => user.username === username);
 
     if (user && user.password === password) {
+      const token = Math.floor(Math.random() * 10000000000).toString();
+      SESSIONS.push({ token, userId: user.id });
+
+      res.setHeader("Set-Cookie", `token=${token}; Path=/; HttpOnly`);
       res.status(200).json({ message: "Login successful" });
     } else {
       res.status(401).json({ error: "Invalid credentials" });
