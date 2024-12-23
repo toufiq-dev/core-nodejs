@@ -5,10 +5,15 @@ const PORT = 8081;
 
 const server = new highMark();
 
+server.beforeEach((req, res, next) => {});
+
 server.route("get", "/", (req, res) => {
   res.sendFile("./public/index.html", "text/html");
 });
 server.route("get", "/login", (req, res) => {
+  res.sendFile("./public/index.html", "text/html");
+});
+server.route("get", "/profile", (req, res) => {
   res.sendFile("./public/index.html", "text/html");
 });
 server.route("get", "/styles.css", (req, res) => {
@@ -17,6 +22,21 @@ server.route("get", "/styles.css", (req, res) => {
 server.route("get", "/scripts.js", (req, res) => {
   res.sendFile("./public/scripts.js", "text/javascript");
 });
+
+server.route("get", "/api/user", (req, res) => {
+  const token = req.headers.cookie.split("=")[1];
+  const session = SESSIONS.find((session) => session.token === token);
+
+  if (session) {
+    const user = USERS.find((user) => user.id === session.userId);
+    console.log("User authenticated");
+    res.status(200).json(user);
+  } else {
+    res.status(401).json({ error: "Unauthorized" });
+  }
+});
+
+server.route("put", "/api/user", (req, res) => {});
 
 server.route("get", "/api/posts", (req, res) => {
   const posts = POSTS.map((post) => {
@@ -28,6 +48,8 @@ server.route("get", "/api/posts", (req, res) => {
 
   res.status(200).json(posts);
 });
+
+server.route("post", "/api/posts", (req, res) => {});
 
 server.route("post", "/api/login", (req, res) => {
   let body = "";
@@ -50,6 +72,8 @@ server.route("post", "/api/login", (req, res) => {
     }
   });
 });
+
+server.route("post", "/api/logout", (req, res) => {});
 
 server.listen(PORT, () => {
   console.log("ServerOne listening on port", PORT);
