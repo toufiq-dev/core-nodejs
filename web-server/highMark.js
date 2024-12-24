@@ -5,6 +5,7 @@ class HighMark {
   constructor() {
     this.server = http.createServer();
     this.routes = {};
+    this.middleware = [];
 
     this.server.on("request", (req, res) => {
       // send a file back to the client
@@ -28,16 +29,30 @@ class HighMark {
 
       // if routes object doesn't have a route for this request, send back 404
       const routePath = req.method.toLowerCase() + req.url;
-      if (!this.routes[routePath]) {
-        return res.status(404).json({ error: "Route not found" });
-      }
+      const executeMiddlewares = (index) => {
+        if (index < this.middleware.length) {
+          // Call the current middleware with the `next` function
+          this.middleware[index](req, res, () => executeMiddlewares(index + 1));
+        } else {
+          // All middlewares have executed, now handle the route
+          if (!this.routes[routePath]) {
+            return res.status(404).json({ error: "Route not found" });
+          }
+          this.routes[routePath](req, res);
+        }
+      };
 
-      this.routes[routePath](req, res);
+      // Start middleware execution
+      executeMiddlewares(0);
     });
   }
 
   route(method, path, cb) {
     this.routes[method + path] = cb;
+  }
+
+  beforeEach(cb) {
+    this.middleware.push(cb);
   }
 
   listen(port, cb) {

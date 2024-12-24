@@ -5,7 +5,20 @@ const PORT = 8081;
 
 const server = new highMark();
 
-server.beforeEach((req, res, next) => {});
+server.beforeEach((req, res, next) => {
+  console.log("Before each middleware 1");
+  next();
+});
+
+server.beforeEach((req, res, next) => {
+  console.log("Before each middleware 2");
+  next();
+});
+
+server.beforeEach((req, res, next) => {
+  console.log("Before each middleware 3");
+  next();
+});
 
 server.route("get", "/", (req, res) => {
   res.sendFile("./public/index.html", "text/html");
