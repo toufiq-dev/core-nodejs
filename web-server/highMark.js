@@ -27,7 +27,6 @@ class HighMark {
         res.end(JSON.stringify(data));
       };
 
-      // if routes object doesn't have a route for this request, send back 404
       const routePath = req.method.toLowerCase() + req.url;
       const executeMiddlewares = (index) => {
         if (index < this.middleware.length) {
@@ -35,6 +34,7 @@ class HighMark {
           this.middleware[index](req, res, () => executeMiddlewares(index + 1));
         } else {
           // All middlewares have executed, now handle the route
+          // if routes object doesn't have a route for this request, send back 404
           if (!this.routes[routePath]) {
             return res.status(404).json({ error: "Route not found" });
           }

@@ -6,7 +6,17 @@ const PORT = 8081;
 const server = new highMark();
 
 server.beforeEach((req, res, next) => {
-  console.log("Before each middleware 1");
+  const token = req.headers.cookie.split("=")[1];
+  const session = SESSIONS.find((session) => session.token === token);
+
+  if (session) {
+    const user = USERS.find((user) => user.id === session.userId);
+    console.log("User authenticated");
+    res.status(200).json(user);
+  } else {
+    res.status(401).json({ error: "Unauthorized" });
+  }
+
   next();
 });
 
@@ -36,18 +46,7 @@ server.route("get", "/scripts.js", (req, res) => {
   res.sendFile("./public/scripts.js", "text/javascript");
 });
 
-server.route("get", "/api/user", (req, res) => {
-  const token = req.headers.cookie.split("=")[1];
-  const session = SESSIONS.find((session) => session.token === token);
-
-  if (session) {
-    const user = USERS.find((user) => user.id === session.userId);
-    console.log("User authenticated");
-    res.status(200).json(user);
-  } else {
-    res.status(401).json({ error: "Unauthorized" });
-  }
-});
+server.route("get", "/api/user", (req, res) => {});
 
 server.route("put", "/api/user", (req, res) => {});
 
