@@ -6,39 +6,60 @@ const PORT = 8081;
 const server = new highMark();
 
 server.beforeEach((req, res, next) => {
-  const token = req.headers.cookie.split("=")[1];
-  const session = SESSIONS.find((session) => session.token === token);
+  const routesToAuthenticate = [
+    "GET /api/user",
+    "PUT /api/user",
+    "POST /api/posts",
+    "DELETE /api/logout",
+  ];
+  console.log("Middleware running on", req.method, req.url);
 
-  if (session) {
-    const user = USERS.find((user) => user.id === session.userId);
-    console.log("User authenticated");
-    res.status(200).json(user);
-  } else {
+  if (routesToAuthenticate.includes(req.method + " " + req.url)) {
+    const token = req.headers?.cookie.split("=")[1];
+    const session = SESSIONS.find((session) => session.token === token);
+
+    if (session) {
+      req.userId = session.userId;
+      return next();
+    }
+
     res.status(401).json({ error: "Unauthorized" });
+  } else {
+    next();
   }
-
-  next();
 });
 
+const parseJSON = (req, res, next) => {
+  if (req.headers["content-type"] === "application/json") {
+    let data = "";
+
+    req.on("data", (chunk) => {
+      data += chunk.toString("utf-8");
+    });
+
+    req.on("end", () => {
+      req.body = JSON.parse(data);
+      return next();
+    });
+  } else {
+    next();
+  }
+};
+
+// For parsing JSON request bodies
+server.beforeEach(parseJSON);
+
+// For different routes that need the index.html file
 server.beforeEach((req, res, next) => {
-  console.log("Before each middleware 2");
-  next();
+  const routes = ["/", "/login", "/profile", "/new-post"];
+
+  if (routes.includes(req.url) && req.method === "GET") {
+    return res.status(200).sendFile("./public/index.html", "text/html");
+  } else {
+    next();
+  }
 });
 
-server.beforeEach((req, res, next) => {
-  console.log("Before each middleware 3");
-  next();
-});
-
-server.route("get", "/", (req, res) => {
-  res.sendFile("./public/index.html", "text/html");
-});
-server.route("get", "/login", (req, res) => {
-  res.sendFile("./public/index.html", "text/html");
-});
-server.route("get", "/profile", (req, res) => {
-  res.sendFile("./public/index.html", "text/html");
-});
 server.route("get", "/styles.css", (req, res) => {
   res.sendFile("./public/styles.css", "text/css");
 });
@@ -46,7 +67,11 @@ server.route("get", "/scripts.js", (req, res) => {
   res.sendFile("./public/scripts.js", "text/javascript");
 });
 
-server.route("get", "/api/user", (req, res) => {});
+server.route("get", "/api/user", (req, res) => {
+  const user = USERS.find((user) => user.id === req.userId);
+  console.log("User authenticated");
+  res.status(200).json(user);
+});
 
 server.route("put", "/api/user", (req, res) => {});
 
@@ -64,25 +89,18 @@ server.route("get", "/api/posts", (req, res) => {
 server.route("post", "/api/posts", (req, res) => {});
 
 server.route("post", "/api/login", (req, res) => {
-  let body = "";
-  req.on("data", (chunk) => {
-    body += chunk;
-  });
+  const { username, password } = req.body;
+  const user = USERS.find((user) => user.username === username);
 
-  req.on("end", () => {
-    const { username, password } = JSON.parse(body);
-    const user = USERS.find((user) => user.username === username);
+  if (user && user.password === password) {
+    const token = Math.floor(Math.random() * 10000000000).toString();
+    SESSIONS.push({ token, userId: user.id });
 
-    if (user && user.password === password) {
-      const token = Math.floor(Math.random() * 10000000000).toString();
-      SESSIONS.push({ token, userId: user.id });
-
-      res.setHeader("Set-Cookie", `token=${token}; Path=/; HttpOnly`);
-      res.status(200).json({ message: "Login successful" });
-    } else {
-      res.status(401).json({ error: "Invalid credentials" });
-    }
-  });
+    res.setHeader("Set-Cookie", `token=${token}; Path=/; HttpOnly`);
+    res.status(200).json({ message: "Login successful" });
+  } else {
+    res.status(401).json({ error: "Invalid credentials" });
+  }
 });
 
 server.route("post", "/api/logout", (req, res) => {});
