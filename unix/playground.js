@@ -6,6 +6,12 @@ const subprocess = spawn("ls");
 //   console.log(data.toString());
 // });
 
+console.log(process.argv);
+console.log(process.pid);
+console.log(process.ppid);
+
+console.log(process.env);
+
 exec(
   "echo 'start' && sleep 4 && echo 'something went wrong' | tr ' ' '\n'",
   (err, stdout, stderr) => {
