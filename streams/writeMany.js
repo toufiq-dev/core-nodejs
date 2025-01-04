@@ -2,7 +2,7 @@ const fs = require("fs");
 
 (async () => {
   console.time("writeMany");
-  const filePath = "../uploader/text.txt";
+  const filePath = process.argv[2];
   const writeStream = fs.createWriteStream(filePath, {
     flags: "w",
     encoding: "utf8",
@@ -11,13 +11,16 @@ const fs = require("fs");
   let i = 0;
 
   function write() {
-    let canWrite = true;
-    while (i <= 499999999 && canWrite) {
-      canWrite = writeStream.write(`${i}\n`);
-      i++;
-    }
     if (i <= 499999999) {
-      writeStream.once("drain", write);
+      const canWrite = writeStream.write(`${i}\n`);
+      if (!canWrite) {
+        writeStream.once("drain", write);
+      } else {
+        i++;
+        write();
+      }
+    } else {
+      writeStream.end();
     }
   }
 
