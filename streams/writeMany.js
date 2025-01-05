@@ -11,14 +11,13 @@ const fs = require("fs");
   let i = 0;
 
   function write() {
+    let canWrite = true;
+    while (i <= 499999999 && canWrite) {
+      canWrite = writeStream.write(`${i}\n`);
+      i++;
+    }
     if (i <= 499999999) {
-      const canWrite = writeStream.write(`${i}\n`);
-      if (!canWrite) {
-        writeStream.once("drain", write);
-      } else {
-        i++;
-        write();
-      }
+      writeStream.once("drain", write);
     } else {
       writeStream.end();
     }
