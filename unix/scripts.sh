@@ -13,7 +13,7 @@ echo $(( $x + $y ))
 sleep 5
 
 myfunc () {
-    echo "this is a function"
+    echo "this is a bash function"
     echo $1 | tr " " "\n"
     echo $(($myvar1+$myvar2))
 }
