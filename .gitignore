@@ -1,3 +1,7 @@
 *.txt
+
 .DS_Store
+
 node_modules
+
+config.bat
